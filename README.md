@@ -1,17 +1,24 @@
 # STAT 411 Final Helper Scaffold
 
 This repo is set up so you can work from `main.cpp` while letting R handle the actual statistics calculations and worked-out steps.
+The large `STAT_Scratchpaper.R` notebook is preserved in the repo, and its reusable calculation patterns have been extracted into modular files under `R/`.
 
 ## Files
 
-- `main.cpp`: the exam-facing file where you call helpers like `findMean({1, 5, 9, 3, 4});`.
+- `main.cpp`: the exam-facing file where you call helpers like `findMean({1, 5, 9, 3, 4});` and paste table columns for regression-style problems.
+- `cpp/stats_bridge.hpp` and `cpp/stats_bridge.cpp`: the C++ to R bridge layer used by `main.cpp`.
 - `main.R`: optional pure-R entrypoint if you want to run the helpers directly in R.
 - `R/r_bridge_cli.R`: command-line bridge that receives values from C++ and calls the R helpers.
-- `R/descriptive_stats.R`: mean, median, mode, and range helpers.
-- `R/dispersion_stats.R`: sample/population variance and standard deviation helpers.
-- `R/standardization_stats.R`: starter helper for z-scores.
+- `R/descriptive_stats.R`, `R/dispersion_stats.R`, `R/standardization_stats.R`: core descriptive helpers.
+- `R/position_stats.R`: quartiles, percentile rank, IQR, outliers, weighted mean, sample proportion, percent change, Chebyshev, and empirical rule helpers.
+- `R/grouped_stats.R`: grouped-data mean, variance, SD, and midpoint replication helpers.
+- `R/probability_basics.R`: complement, addition, Bayes, counting rules, discrete table helpers, and empirical distributions.
+- `R/distribution_stats.R`: geometric, binomial, Poisson, hypergeometric, normal, uniform, exponential, t, chi-square, F, and sampling-distribution helpers.
+- `R/inference_stats.R`: confidence intervals, hypothesis tests, sample-size formulas, paired tests, two-sample tests, two-proportion tests, and variance tests.
+- `R/regression_stats.R`: correlation, regression line, prediction, row-by-row regression table filling, residual/error, `R^2`, and SSE helpers.
 - `R/worked_calculation.R`: the shared object/print format for showing formulas and work.
 - `R/stat_utils.R`: formatting and validation helpers.
+- `STAT_Scratchpaper.R`: the original semester scratch notebook kept for reference.
 
 ## How to Build and Run
 
@@ -52,35 +59,40 @@ main()
 
 ## C++ Exam Workflow
 
-1. Put your numbers into the `dataSet` vector in `main.cpp`.
-2. Uncomment the function calls you need in `main.cpp`.
-3. Build and run `./stats_helper`.
-4. Read the printed formula, substitutions, and final answer.
+1. Put single-list data into the `dataSet` vector in `main.cpp`, or paste table columns into the `observedY` / `predictorX` vectors there.
+2. If a regression equation is given, put the intercept and slope into `regressionIntercept` and `regressionSlope`.
+3. Uncomment the function calls you need in `main.cpp`.
+4. Build and run `./stats_helper`.
+5. Read the printed formula, substitutions, and final answer.
 
 Example:
 
 ```cpp
-const std::vector<double> dataSet = {1, 5, 9, 3, 4};
-
-findMean(dataSet);
-findMedian(dataSet);
-findSampleStandardDeviation(dataSet);
-findPopulationZScore(23, 18, 4);
+stats_bridge::findMean({1, 5, 9, 3, 4});
+stats_bridge::findBinomialProbability("exact", 10, 0.3, 4);
+stats_bridge::runOneSampleTTest(433, 437, 22, 17, 0.05, "left");
+stats_bridge::findCorrelation({2, 3, 5, 3, 4, 6}, {125, 138, 116, 121, 136, 115});
+stats_bridge::findRegressionPredictionRow(184.8, 1006, 32.98, 0.14);
+stats_bridge::findRegressionPredictionTable(
+  {227.6, 257.2, 269.4, 203.5, 225.4, 217.4, 182.2, 184.8},
+  {1428, 1494, 1694, 1214, 1399, 1291, 1193, 1006},
+  32.98,
+  0.14
+);
 ```
 
-## Current C++ Helpers
+## Current C++ Helper Families
 
-- `findMean(dataSet)`
-- `findPopulationMean(dataSet)`
-- `findMedian(dataSet)`
-- `findMode(dataSet)`
-- `findRange(dataSet)`
-- `findSampleVariance(dataSet)`
-- `findPopulationVariance(dataSet)`
-- `findSampleStandardDeviation(dataSet)`
-- `findPopulationStandardDeviation(dataSet)`
-- `findPopulationZScore(x, mu, sigma)`
-- `findSampleZScore(x, xBar, s)`
+- descriptive statistics and relative position
+- grouped-data statistics
+- probability rules and counting
+- discrete and continuous distributions
+- confidence intervals and sample-size formulas
+- one-sample, two-sample, paired, and proportion tests
+- variance / chi-square procedures
+- correlation and simple linear regression
+
+Open `main.cpp` to see representative call names and argument order.
 
 ## Pure R Helpers
 
@@ -96,6 +108,7 @@ If you want to call R directly instead, these still exist:
 - `sample_sd(x)`
 - `population_sd(x)`
 - `z_score_worked(x_value, center_value, spread_value, mean_symbol = "mu", sd_symbol = "sigma")`
+- plus the additional helpers in `position_stats.R`, `grouped_stats.R`, `probability_basics.R`, `distribution_stats.R`, `inference_stats.R`, and `regression_stats.R`
 
 ## Likely Next Helpers
 

@@ -15,13 +15,27 @@ get_project_root <- function() {
   normalizePath(getwd())
 }
 
-project_root <- get_project_root()
+project_root <- if (exists("CODEX_PROJECT_ROOT", inherits = TRUE)) {
+  get("CODEX_PROJECT_ROOT", inherits = TRUE)
+} else {
+  get_project_root()
+}
 
-source(file.path(project_root, "R", "stat_utils.R"))
-source(file.path(project_root, "R", "worked_calculation.R"))
-source(file.path(project_root, "R", "descriptive_stats.R"))
-source(file.path(project_root, "R", "dispersion_stats.R"))
-source(file.path(project_root, "R", "standardization_stats.R"))
+load_stat_modules <- function(project_root_path) {
+  source(file.path(project_root_path, "R", "stat_utils.R"))
+  source(file.path(project_root_path, "R", "worked_calculation.R"))
+  source(file.path(project_root_path, "R", "descriptive_stats.R"))
+  source(file.path(project_root_path, "R", "dispersion_stats.R"))
+  source(file.path(project_root_path, "R", "standardization_stats.R"))
+  source(file.path(project_root_path, "R", "position_stats.R"))
+  source(file.path(project_root_path, "R", "grouped_stats.R"))
+  source(file.path(project_root_path, "R", "probability_basics.R"))
+  source(file.path(project_root_path, "R", "distribution_stats.R"))
+  source(file.path(project_root_path, "R", "inference_stats.R"))
+  source(file.path(project_root_path, "R", "regression_stats.R"))
+}
+
+load_stat_modules(project_root)
 
 main <- function() {
   data <- c(12, 15, 18, 20, 20, 25)
@@ -41,6 +55,10 @@ main <- function() {
   # print_calculation(population_sd(data))
   # print_calculation(z_score_worked(example_x, example_mu, example_sigma))
   # print_calculation(z_score_worked(example_x, mean(data), sd(data), mean_symbol = "x_bar", sd_symbol = "s"))
+  # print_calculation(binomial_probability_worked(10, 0.3, "exact", 4))
+  # print_calculation(mean_ci_unknown_sigma_worked(650, 60, 25, 0.99))
+  # print_calculation(one_sample_t_test_worked(433, 437, 22, 17, 0.05, "left"))
+  # print_calculation(correlation_worked(c(2, 3, 5, 3, 4, 6), c(125, 138, 116, 121, 136, 115)))
 
   invisible(0)
 }

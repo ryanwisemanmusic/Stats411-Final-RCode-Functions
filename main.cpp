@@ -1,146 +1,49 @@
-#include <cstdlib>
-#include <filesystem>
-#include <initializer_list>
-#include <iomanip>
+#include "cpp/stats_bridge.hpp"
+
 #include <iostream>
-#include <limits>
-#include <sstream>
 #include <stdexcept>
-#include <string>
 #include <vector>
-
-namespace stats_bridge {
-
-std::filesystem::path g_project_root;
-
-std::string shell_escape(const std::string& value) {
-  std::string escaped = "'";
-
-  for (char character : value) {
-    if (character == '\'') {
-      escaped += "'\\''";
-    } else {
-      escaped += character;
-    }
-  }
-
-  escaped += "'";
-  return escaped;
-}
-
-std::string number_to_string(double value) {
-  std::ostringstream stream;
-  stream << std::setprecision(std::numeric_limits<double>::digits10 + 1) << value;
-  return stream.str();
-}
-
-std::filesystem::path detect_project_root(const char* argv0) {
-  std::vector<std::filesystem::path> candidates;
-  candidates.push_back(std::filesystem::current_path());
-
-  if (argv0 != nullptr && std::string(argv0).size() > 0) {
-    candidates.push_back(std::filesystem::absolute(argv0).parent_path());
-  }
-
-  for (const auto& candidate : candidates) {
-    if (std::filesystem::exists(candidate / "R" / "r_bridge_cli.R")) {
-      return candidate;
-    }
-  }
-
-  throw std::runtime_error(
-    "Could not find R/r_bridge_cli.R. Run the program from the repo root or keep the binary there."
-  );
-}
-
-void initialize_bridge(const char* argv0) {
-  g_project_root = detect_project_root(argv0);
-}
-
-void run_r_calculation(const std::string& operation, const std::vector<double>& values) {
-  if (g_project_root.empty()) {
-    throw std::runtime_error("Bridge not initialized. Call initialize_bridge() first.");
-  }
-
-  const auto bridge_script = g_project_root / "R" / "r_bridge_cli.R";
-
-  std::ostringstream command;
-  command << "Rscript " << shell_escape(bridge_script.string()) << " " << shell_escape(operation);
-
-  for (double value : values) {
-    command << " " << shell_escape(number_to_string(value));
-  }
-
-  const int exit_code = std::system(command.str().c_str());
-  if (exit_code != 0) {
-    throw std::runtime_error("R calculation failed for operation: " + operation);
-  }
-}
-
-void findMean(const std::vector<double>& dataSet) {
-  run_r_calculation("sample_mean", dataSet);
-}
-
-void findPopulationMean(const std::vector<double>& dataSet) {
-  run_r_calculation("population_mean", dataSet);
-}
-
-void findMedian(const std::vector<double>& dataSet) {
-  run_r_calculation("median", dataSet);
-}
-
-void findMode(const std::vector<double>& dataSet) {
-  run_r_calculation("mode", dataSet);
-}
-
-void findRange(const std::vector<double>& dataSet) {
-  run_r_calculation("range", dataSet);
-}
-
-void findSampleVariance(const std::vector<double>& dataSet) {
-  run_r_calculation("sample_variance", dataSet);
-}
-
-void findPopulationVariance(const std::vector<double>& dataSet) {
-  run_r_calculation("population_variance", dataSet);
-}
-
-void findSampleStandardDeviation(const std::vector<double>& dataSet) {
-  run_r_calculation("sample_sd", dataSet);
-}
-
-void findPopulationStandardDeviation(const std::vector<double>& dataSet) {
-  run_r_calculation("population_sd", dataSet);
-}
-
-void findPopulationZScore(double x, double mu, double sigma) {
-  run_r_calculation("z_score_population", {x, mu, sigma});
-}
-
-void findSampleZScore(double x, double xBar, double s) {
-  run_r_calculation("z_score_sample", {x, xBar, s});
-}
-
-}  // namespace stats_bridge
 
 int main(int argc, char* argv[]) {
   try {
     stats_bridge::initialize_bridge(argc > 0 ? argv[0] : nullptr);
 
-    const std::vector<double> dataSet = {1, 5, 9, 3, 4};
+    // Single-list problems: plug one data set in here and uncomment what you need.
+    [[maybe_unused]] const stats_bridge::NumberList dataSet = {1, 5, 9, 3, 4};
+
+    // Table-style regression problems: paste the full columns here.
+    // observedY is the response / observed value column.
+    // predictorX is the explanatory / x column.
+    [[maybe_unused]] const stats_bridge::NumberList observedY = {
+      227.6, 257.2, 269.4, 203.5, 225.4, 217.4, 182.2, 184.8
+    };
+    [[maybe_unused]] const stats_bridge::NumberList predictorX = {
+      1428, 1494, 1694, 1214, 1399, 1291, 1193, 1006
+    };
+    [[maybe_unused]] const double regressionIntercept = 32.98;
+    [[maybe_unused]] const double regressionSlope = 0.14;
+    [[maybe_unused]] const double rowObservedY = 184.8;
+    [[maybe_unused]] const double rowPredictorX = 1006;
 
     // Uncomment only the calculations you want during the exam.
     stats_bridge::findMean(dataSet);
-    // stats_bridge::findPopulationMean(dataSet);
     // stats_bridge::findMedian(dataSet);
-    // stats_bridge::findMode(dataSet);
-    // stats_bridge::findRange(dataSet);
-    // stats_bridge::findSampleVariance(dataSet);
-    // stats_bridge::findPopulationVariance(dataSet);
     // stats_bridge::findSampleStandardDeviation(dataSet);
-    // stats_bridge::findPopulationStandardDeviation(dataSet);
-    // stats_bridge::findPopulationZScore(23, 18, 4);
-    // stats_bridge::findSampleZScore(23, 18.3333, 4.5898);
+    // stats_bridge::findType2Quantile(0.75, {16, 18, 20, 21, 23, 23, 24, 32, 36, 42});
+    // stats_bridge::findGroupedSampleStats({8, 13, 18, 23, 28}, {12, 17, 22, 27, 32}, {5, 9, 14, 8, 4});
+    // stats_bridge::findBinomialProbability("exact", 10, 0.3, 4);
+    // stats_bridge::findPoissonProbability("at_most", 5.0, 4);
+    // stats_bridge::findNormalProbability("between", 17.64, 12.1, 12, 15);
+    // stats_bridge::findMeanCIUnknownSigma(650, 60, 25, 0.99);
+    // stats_bridge::runOneSampleTTest(433, 437, 22, 17, 0.05, "left");
+    // stats_bridge::runWelchTTest(21.5, 20.9, 2.5, 4.1, 48, 40, 0.10, "right");
+    // stats_bridge::runTwoProportionZTest(100, 500, 77, 500, 0.01, "right");
+    // stats_bridge::findCorrelation({2, 3, 5, 3, 4, 6}, {125, 138, 116, 121, 136, 115});
+    // stats_bridge::findRegressionPredictionFromCoefficients(12.25, 0.14, 1956);
+    // stats_bridge::findRegressionPredictionRow(rowObservedY, rowPredictorX, regressionIntercept, regressionSlope);
+    // stats_bridge::findRegressionPredictionTable(observedY, predictorX, regressionIntercept, regressionSlope);
+    // stats_bridge::findRegressionLine(predictorX, observedY);
+    // stats_bridge::findRegressionSSE(predictorX, observedY);
 
     return 0;
   } catch (const std::exception& error) {

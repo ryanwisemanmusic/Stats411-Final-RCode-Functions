@@ -1,11 +1,12 @@
-new_worked_calculation <- function(title, notation = NULL, formula = NULL, steps, answer) {
+new_worked_calculation <- function(title, notation = NULL, formula = NULL, steps, answer, result = NULL) {
   structure(
     list(
       title = title,
       notation = notation,
       formula = formula,
       steps = steps,
-      answer = answer
+      answer = answer,
+      result = result
     ),
     class = "worked_calculation"
   )
