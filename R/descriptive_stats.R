@@ -147,6 +147,99 @@ mode_worked <- function(x, digits = 4) {
   )
 }
 
+validate_labeled_counts <- function(labels, counts) {
+  if (!is.character(labels) || length(labels) < 1 || any(is.na(labels)) || any(nchar(labels) == 0)) {
+    stop("labels must be a non-empty character vector with no blank values.", call. = FALSE)
+  }
+
+  counts <- ensure_numeric_vector(counts)
+  ensure_same_length(labels, counts, names = c("labels", "counts"))
+
+  if (any(counts < 0) || any(abs(counts - round(counts)) > 1e-9)) {
+    stop("counts must be nonnegative integers.", call. = FALSE)
+  }
+
+  list(labels = labels, counts = round(counts))
+}
+
+most_frequent_category_worked <- function(labels, counts, digits = 4) {
+  labeled_counts <- validate_labeled_counts(labels, counts)
+
+  labels <- labeled_counts$labels
+  counts <- labeled_counts$counts
+  largest_count <- max(counts)
+  winners <- labels[counts == largest_count]
+
+  steps <- c(
+    paste0(
+      "Category counts = ",
+      paste0(labels, ":", counts, collapse = "; ")
+    ),
+    paste0("Largest count = ", largest_count)
+  )
+
+  if (length(winners) == 1) {
+    steps <- c(steps, paste0("Most frequent category = ", winners[1]))
+  } else {
+    steps <- c(steps, paste0("Tie for most frequent category = ", paste(winners, collapse = ", ")))
+  }
+
+  new_worked_calculation(
+    title = "Most Frequent Category",
+    notation = "arg max count",
+    formula = "Choose the category or categories with the largest frequency.",
+    steps = steps,
+    answer = paste0("Most frequent category = ", paste(winners, collapse = ", ")),
+    result = list(categories = winners, count = largest_count)
+  )
+}
+
+category_proportion_worked <- function(target_label, labels, counts, digits = 4) {
+  labeled_counts <- validate_labeled_counts(labels, counts)
+
+  labels <- labeled_counts$labels
+  counts <- labeled_counts$counts
+
+  if (!is.character(target_label) || length(target_label) != 1 || is.na(target_label) || nchar(target_label) == 0) {
+    stop("target_label must be a single non-empty character string.", call. = FALSE)
+  }
+
+  if (!target_label %in% labels) {
+    stop("target_label was not found in labels.", call. = FALSE)
+  }
+
+  total_count <- sum(counts)
+  target_count <- counts[match(target_label, labels)]
+  proportion <- target_count / total_count
+
+  steps <- c(
+    paste0(
+      "Category counts = ",
+      paste0(labels, ":", counts, collapse = "; ")
+    ),
+    paste0("Target category = ", target_label),
+    paste0("Target count = ", target_count),
+    paste0("Total count = ", total_count),
+    paste0(
+      "Proportion = ",
+      target_count,
+      " / ",
+      total_count,
+      " = ",
+      format_number(proportion, digits)
+    )
+  )
+
+  new_worked_calculation(
+    title = "Category Proportion",
+    notation = "p_hat",
+    formula = "Proportion = target count / total count",
+    steps = steps,
+    answer = paste0("Category proportion = ", format_number(proportion, digits), " = ", format_percent(proportion, digits)),
+    result = proportion
+  )
+}
+
 range_worked <- function(x, digits = 4) {
   x <- ensure_numeric_vector(x)
 

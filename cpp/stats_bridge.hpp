@@ -75,6 +75,22 @@ inline StringList interleave_distribution_pairs(const NumberList& values, const 
   return interleave_pairs(values, probabilities);
 }
 
+inline StringList interleave_label_count_pairs(const StringList& labels, const NumberList& counts) {
+  if (labels.size() != counts.size()) {
+    throw std::runtime_error("labels and counts must have the same size.");
+  }
+
+  StringList args;
+  args.reserve(labels.size() * 2);
+
+  for (std::size_t index = 0; index < labels.size(); ++index) {
+    args.push_back(labels[index]);
+    args.push_back(std::to_string(counts[index]));
+  }
+
+  return args;
+}
+
 inline void run_vector_operation(const std::string& operation, const NumberList& values) {
   run_operation(operation, number_args(values));
 }
@@ -159,6 +175,21 @@ inline void findOutlierFences(std::initializer_list<double> data_set) { findOutl
 inline void findFrequencyTable(const NumberList& data_set) { run_vector_operation("frequency_table", data_set); }
 inline void findFrequencyTable(std::initializer_list<double> data_set) { findFrequencyTable(make_number_list(data_set)); }
 
+inline void findMostFrequentCategory(const StringList& labels, const NumberList& counts) {
+  run_operation("most_frequent_category", interleave_label_count_pairs(labels, counts));
+}
+
+inline void findCategoryProportionByLabel(
+  const std::string& target_label,
+  const StringList& labels,
+  const NumberList& counts
+) {
+  StringList args = {target_label};
+  StringList label_count_pairs = interleave_label_count_pairs(labels, counts);
+  args.insert(args.end(), label_count_pairs.begin(), label_count_pairs.end());
+  run_operation("category_proportion", args);
+}
+
 inline void findWeightedMean(const NumberList& observations, const NumberList& weights) {
   run_operation("weighted_mean", interleave_pairs(observations, weights));
 }
@@ -179,6 +210,10 @@ inline void findSampleProportion(double successes, int total_count) {
   run_operation("sample_proportion", {std::to_string(successes), std::to_string(total_count)});
 }
 
+inline void findCountFromProportion(int total_count, double proportion) {
+  run_operation("count_from_proportion", {std::to_string(total_count), std::to_string(proportion)});
+}
+
 inline void findPercentChange(double old_value, double new_value) {
   run_operation("percent_change", {std::to_string(old_value), std::to_string(new_value)});
 }
@@ -189,6 +224,14 @@ inline void findPopulationZScore(double x, double mu, double sigma) {
 
 inline void findSampleZScore(double x, double x_bar, double s) {
   run_operation("z_score_sample", {std::to_string(x), std::to_string(x_bar), std::to_string(s)});
+}
+
+inline void findValueFromPopulationZScore(double z, double mu, double sigma) {
+  run_operation("value_from_z_population", {std::to_string(z), std::to_string(mu), std::to_string(sigma)});
+}
+
+inline void findValueFromSampleZScore(double z, double x_bar, double s) {
+  run_operation("value_from_z_sample", {std::to_string(z), std::to_string(x_bar), std::to_string(s)});
 }
 
 inline void findChebyshevByK(double k) { run_operation("chebyshev_k", {std::to_string(k)}); }
@@ -202,6 +245,42 @@ inline void findChebyshevByInterval(double mean_value, double sd_value, double l
 
 inline void findEmpiricalRule(const NumberList& data_set) { run_vector_operation("empirical_rule", data_set); }
 inline void findEmpiricalRule(std::initializer_list<double> data_set) { findEmpiricalRule(make_number_list(data_set)); }
+
+inline void findEmpiricalRuleFromSummary(
+  double mean_value,
+  double sd_value,
+  const std::string& event,
+  double value1
+) {
+  run_operation(
+    "empirical_rule_summary",
+    {event, std::to_string(mean_value), std::to_string(sd_value), std::to_string(value1)}
+  );
+}
+
+inline void findEmpiricalRuleFromSummary(
+  double mean_value,
+  double sd_value,
+  const std::string& event,
+  double value1,
+  double value2
+) {
+  run_operation(
+    "empirical_rule_summary",
+    {event, std::to_string(mean_value), std::to_string(sd_value), std::to_string(value1), std::to_string(value2)}
+  );
+}
+
+inline void findGroupedMidpoints(const NumberList& lower, const NumberList& upper) {
+  run_operation("grouped_midpoints", interleave_pairs(lower, upper));
+}
+
+inline void findGroupedMidpointAt(const NumberList& lower, const NumberList& upper, int class_index) {
+  StringList args = {std::to_string(class_index)};
+  StringList pair_args = interleave_pairs(lower, upper);
+  args.insert(args.end(), pair_args.begin(), pair_args.end());
+  run_operation("grouped_midpoint_at", args);
+}
 
 inline void findGroupedSampleStats(const NumberList& lower, const NumberList& upper, const NumberList& freq) {
   run_operation("grouped_sample_stats", interleave_triplets(lower, upper, freq));

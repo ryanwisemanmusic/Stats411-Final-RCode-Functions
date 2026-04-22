@@ -42,6 +42,17 @@ parse_distribution_pair_matrix <- function(args) {
   split_interleaved_distribution_pairs(parse_numeric_args(args))
 }
 
+parse_label_count_pairs <- function(args) {
+  if (length(args) < 2 || length(args) %% 2 != 0) {
+    stop("Label/count operations require alternating label and count arguments.", call. = FALSE)
+  }
+
+  list(
+    labels = args[seq(1, length(args), by = 2)],
+    counts = parse_numeric_args(args[seq(2, length(args), by = 2)])
+  )
+}
+
 args <- commandArgs(trailingOnly = TRUE)
 
 if (length(args) < 1) {
@@ -79,6 +90,15 @@ calculation <- switch(
   iqr_type2 = iqr_type2_worked(parse_numeric_args(op_args)),
   outlier_fences = outlier_fences_worked(parse_numeric_args(op_args)),
   frequency_table = frequency_table_worked(parse_numeric_args(op_args)),
+  most_frequent_category = {
+    labeled_counts <- parse_label_count_pairs(op_args)
+    most_frequent_category_worked(labeled_counts$labels, labeled_counts$counts)
+  },
+  category_proportion = {
+    target_label <- op_args[1]
+    labeled_counts <- parse_label_count_pairs(op_args[-1])
+    category_proportion_worked(target_label, labeled_counts$labels, labeled_counts$counts)
+  },
   weighted_mean = {
     pair_matrix <- parse_pair_matrix(op_args)
     weighted_mean_worked(pair_matrix[, 1], pair_matrix[, 2])
@@ -95,6 +115,10 @@ calculation <- switch(
     numeric_args <- parse_numeric_args(op_args)
     sample_proportion_worked(numeric_args[1], numeric_args[2])
   },
+  count_from_proportion = {
+    numeric_args <- parse_numeric_args(op_args)
+    count_from_proportion_worked(numeric_args[1], numeric_args[2])
+  },
   percent_change = {
     numeric_args <- parse_numeric_args(op_args)
     percent_change_worked(numeric_args[1], numeric_args[2])
@@ -107,12 +131,38 @@ calculation <- switch(
     numeric_args <- parse_numeric_args(op_args)
     z_score_worked(numeric_args[1], numeric_args[2], numeric_args[3], mean_symbol = "x_bar", sd_symbol = "s")
   },
+  value_from_z_population = {
+    numeric_args <- parse_numeric_args(op_args)
+    value_from_z_worked(numeric_args[1], numeric_args[2], numeric_args[3], mean_symbol = "mu", sd_symbol = "sigma")
+  },
+  value_from_z_sample = {
+    numeric_args <- parse_numeric_args(op_args)
+    value_from_z_worked(numeric_args[1], numeric_args[2], numeric_args[3], mean_symbol = "x_bar", sd_symbol = "s")
+  },
   chebyshev_k = chebyshev_k_worked(parse_numeric_args(op_args)[1]),
   chebyshev_interval = {
     numeric_args <- parse_numeric_args(op_args)
     chebyshev_interval_worked(numeric_args[1], numeric_args[2], numeric_args[3], numeric_args[4])
   },
   empirical_rule = empirical_rule_worked(parse_numeric_args(op_args)),
+  empirical_rule_summary = {
+    event <- op_args[1]
+    numeric_args <- parse_numeric_args(op_args[-1])
+    if (event == "between") {
+      empirical_rule_summary_worked(numeric_args[1], numeric_args[2], event, numeric_args[3], numeric_args[4])
+    } else {
+      empirical_rule_summary_worked(numeric_args[1], numeric_args[2], event, numeric_args[3])
+    }
+  },
+  grouped_midpoints = {
+    pair_matrix <- parse_pair_matrix(op_args)
+    grouped_midpoints_worked(pair_matrix[, 1], pair_matrix[, 2])
+  },
+  grouped_midpoint_at = {
+    numeric_args <- parse_numeric_args(op_args)
+    pair_matrix <- split_interleaved_pairs(numeric_args[-1])
+    grouped_midpoint_at_worked(pair_matrix[, 1], pair_matrix[, 2], numeric_args[1])
+  },
   grouped_sample_stats = {
     triplets <- parse_triplet_matrix(op_args)
     grouped_sample_stats_worked(triplets[, 1], triplets[, 2], triplets[, 3])

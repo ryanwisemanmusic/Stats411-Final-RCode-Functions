@@ -1,18 +1,25 @@
-validate_grouped_inputs <- function(lower, upper, freq) {
+validate_grouped_bounds <- function(lower, upper) {
   lower <- ensure_numeric_vector(lower)
   upper <- ensure_numeric_vector(upper)
-  freq <- ensure_numeric_vector(freq)
-  ensure_same_length(lower, upper, freq, names = c("lower", "upper", "freq"))
+  ensure_same_length(lower, upper, names = c("lower", "upper"))
 
   if (any(upper <= lower)) {
     stop("Each upper class boundary must be larger than its lower boundary.", call. = FALSE)
   }
 
+  list(lower = lower, upper = upper)
+}
+
+validate_grouped_inputs <- function(lower, upper, freq) {
+  bounds <- validate_grouped_bounds(lower, upper)
+  freq <- ensure_numeric_vector(freq)
+  ensure_same_length(bounds$lower, bounds$upper, freq, names = c("lower", "upper", "freq"))
+
   if (any(freq < 0) || any(abs(freq - round(freq)) > 1e-9)) {
     stop("Grouped frequencies must be nonnegative integers.", call. = FALSE)
   }
 
-  list(lower = lower, upper = upper, freq = round(freq))
+  list(lower = bounds$lower, upper = bounds$upper, freq = round(freq))
 }
 
 grouped_details <- function(lower, upper, freq, sample = TRUE) {
@@ -167,5 +174,74 @@ grouped_replication_stats_worked <- function(lower, upper, freq, digits = 4) {
       "; SD = ", format_number(sd_value, digits)
     ),
     result = list(mean = mean_value, variance = variance_value, sd = sd_value)
+  )
+}
+
+grouped_midpoints_worked <- function(lower, upper, digits = 4) {
+  bounds <- validate_grouped_bounds(lower, upper)
+  midpoints <- (bounds$lower + bounds$upper) / 2
+
+  steps <- c(
+    paste0(
+      "Classes = ",
+      paste0(
+        "[",
+        format_number(bounds$lower, digits),
+        ", ",
+        format_number(bounds$upper, digits),
+        "]",
+        collapse = "; "
+      )
+    ),
+    paste0(
+      "Midpoints = (lower + upper) / 2 = {",
+      join_values(midpoints, digits),
+      "}"
+    )
+  )
+
+  new_worked_calculation(
+    title = "Grouped Midpoints",
+    notation = "class midpoint",
+    formula = "Midpoint = (lower class limit + upper class limit) / 2",
+    steps = steps,
+    answer = paste0("Grouped midpoints = {", join_values(midpoints, digits), "}"),
+    result = midpoints
+  )
+}
+
+grouped_midpoint_at_worked <- function(lower, upper, class_index, digits = 4) {
+  bounds <- validate_grouped_bounds(lower, upper)
+  class_index <- ensure_count_scalar(class_index, "class_index", min_value = 1)
+
+  if (class_index > length(bounds$lower)) {
+    stop("class_index cannot be larger than the number of classes.", call. = FALSE)
+  }
+
+  lower_value <- bounds$lower[class_index]
+  upper_value <- bounds$upper[class_index]
+  midpoint <- (lower_value + upper_value) / 2
+
+  steps <- c(
+    paste0("Class index = ", class_index),
+    paste0("Lower class limit = ", format_number(lower_value, digits)),
+    paste0("Upper class limit = ", format_number(upper_value, digits)),
+    paste0(
+      "Midpoint = (",
+      format_number(lower_value, digits),
+      " + ",
+      format_number(upper_value, digits),
+      ") / 2 = ",
+      format_number(midpoint, digits)
+    )
+  )
+
+  new_worked_calculation(
+    title = "Grouped Midpoint For One Class",
+    notation = "class midpoint",
+    formula = "Midpoint = (lower class limit + upper class limit) / 2",
+    steps = steps,
+    answer = paste0("Class midpoint = ", format_number(midpoint, digits)),
+    result = midpoint
   )
 }

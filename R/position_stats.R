@@ -320,6 +320,35 @@ sample_proportion_worked <- function(x_success, n_total, digits = 4) {
   )
 }
 
+count_from_proportion_worked <- function(n_total, proportion, digits = 4) {
+  n_total <- ensure_count_scalar(n_total, "n_total", min_value = 1)
+  proportion <- ensure_probability(proportion, "proportion")
+
+  result <- n_total * proportion
+
+  steps <- c(
+    paste0("n = ", n_total),
+    paste0("Proportion = ", format_number(proportion, digits), " = ", format_percent(proportion, digits)),
+    paste0(
+      "Count = n * proportion = ",
+      n_total,
+      " * ",
+      format_number(proportion, digits),
+      " = ",
+      format_number(result, digits)
+    )
+  )
+
+  new_worked_calculation(
+    title = "Count From Proportion",
+    notation = "count",
+    formula = "Count = n * proportion",
+    steps = steps,
+    answer = paste0("Count = ", format_number(result, digits)),
+    result = result
+  )
+}
+
 percent_change_worked <- function(old_value, new_value, digits = 4) {
   old_value <- ensure_numeric_scalar(old_value, "old_value")
   new_value <- ensure_numeric_scalar(new_value, "new_value")
@@ -434,5 +463,124 @@ empirical_rule_worked <- function(x, digits = 4) {
       "; 99.7%: ", format_interval(interval_3[1], interval_3[2], digits)
     ),
     result = list(interval_68 = interval_1, interval_95 = interval_2, interval_997 = interval_3)
+  )
+}
+
+empirical_rule_summary_landmarks <- function() {
+  c(
+    "-3" = 0.0015,
+    "-2" = 0.025,
+    "-1" = 0.16,
+    "0" = 0.5,
+    "1" = 0.84,
+    "2" = 0.975,
+    "3" = 0.9985
+  )
+}
+
+empirical_rule_match_k <- function(z_value) {
+  candidate_values <- c(-3, -2, -1, 0, 1, 2, 3)
+  differences <- abs(candidate_values - z_value)
+  best_index <- which.min(differences)
+
+  if (differences[best_index] > 1e-9) {
+    stop(
+      "empirical_rule_summary_worked expects values located exactly at the mean or at 1, 2, or 3 standard deviations from the mean.",
+      call. = FALSE
+    )
+  }
+
+  candidate_values[best_index]
+}
+
+empirical_rule_summary_worked <- function(mean_value, sd_value, event, value1, value2 = NULL, digits = 4) {
+  mean_value <- ensure_numeric_scalar(mean_value, "mean_value")
+  sd_value <- ensure_positive_scalar(sd_value, "sd_value")
+  event <- ensure_event(event)
+  value1 <- ensure_numeric_scalar(value1, "value1")
+
+  landmarks <- empirical_rule_summary_landmarks()
+  z_value1 <- (value1 - mean_value) / sd_value
+  k_value1 <- empirical_rule_match_k(z_value1)
+  cumulative1 <- unname(landmarks[as.character(k_value1)])
+
+  steps <- c(
+    paste0("Mean = ", format_number(mean_value, digits)),
+    paste0("SD = ", format_number(sd_value, digits))
+  )
+
+  if (event == "between") {
+    value2 <- ensure_numeric_scalar(value2, "value2")
+    z_value2 <- (value2 - mean_value) / sd_value
+    k_value2 <- empirical_rule_match_k(z_value2)
+    cumulative2 <- unname(landmarks[as.character(k_value2)])
+    lower_value <- min(value1, value2)
+    upper_value <- max(value1, value2)
+    lower_k <- min(k_value1, k_value2)
+    upper_k <- max(k_value1, k_value2)
+    lower_cumulative <- unname(landmarks[as.character(lower_k)])
+    upper_cumulative <- unname(landmarks[as.character(upper_k)])
+    result <- upper_cumulative - lower_cumulative
+
+    steps <- c(
+      steps,
+      paste0("Lower bound = ", format_number(lower_value, digits), ", z = ", format_number((lower_value - mean_value) / sd_value, digits)),
+      paste0("Upper bound = ", format_number(upper_value, digits), ", z = ", format_number((upper_value - mean_value) / sd_value, digits)),
+      paste0(
+        "Empirical-rule area = cumulative(",
+        upper_k,
+        " SD) - cumulative(",
+        lower_k,
+        " SD) = ",
+        format_number(upper_cumulative, digits),
+        " - ",
+        format_number(lower_cumulative, digits),
+        " = ",
+        format_number(result, digits)
+      )
+    )
+
+    return(
+      new_worked_calculation(
+        title = "Empirical Rule From Mean And SD",
+        notation = "68-95-99.7",
+        formula = "Convert bounds to standard-deviation landmarks and subtract empirical-rule cumulative areas.",
+        steps = steps,
+        answer = paste0("Empirical-rule proportion = ", format_number(result, digits), " = ", format_percent(result, digits)),
+        result = result
+      )
+    )
+  }
+
+  if (event %in% c("less_than", "at_most")) {
+    result <- cumulative1
+    steps <- c(
+      steps,
+      paste0("Bound = ", format_number(value1, digits), ", z = ", format_number(z_value1, digits)),
+      paste0("Empirical-rule cumulative area = ", format_number(result, digits))
+    )
+  } else if (event %in% c("greater_than", "at_least")) {
+    result <- 1 - cumulative1
+    steps <- c(
+      steps,
+      paste0("Bound = ", format_number(value1, digits), ", z = ", format_number(z_value1, digits)),
+      paste0(
+        "Empirical-rule upper-tail area = 1 - ",
+        format_number(cumulative1, digits),
+        " = ",
+        format_number(result, digits)
+      )
+    )
+  } else {
+    stop("empirical_rule_summary_worked supports less_than, at_most, greater_than, at_least, and between.", call. = FALSE)
+  }
+
+  new_worked_calculation(
+    title = "Empirical Rule From Mean And SD",
+    notation = "68-95-99.7",
+    formula = "Convert the bound to a standard-deviation landmark and use the empirical-rule cumulative area.",
+    steps = steps,
+    answer = paste0("Empirical-rule proportion = ", format_number(result, digits), " = ", format_percent(result, digits)),
+    result = result
   )
 }
