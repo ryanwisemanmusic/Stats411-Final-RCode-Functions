@@ -2,7 +2,9 @@ CXX ?= clang++
 CXXFLAGS ?= -std=c++17 -Wall -Wextra -pedantic
 TARGET := stats_helper
 SOURCES := main.cpp cpp/stats_bridge.cpp
+CPP_HEADERS := cpp/stats_bridge.hpp
 R_SCRIPTS := \
+	R/claim_analysis.R \
 	R/descriptive_stats.R \
 	R/distribution_stats.R \
 	R/dispersion_stats.R \
@@ -21,7 +23,7 @@ R_SCRIPTS := \
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCES) $(R_SCRIPTS)
+$(TARGET): $(SOURCES) $(CPP_HEADERS) $(R_SCRIPTS)
 	$(CXX) $(CXXFLAGS) $(SOURCES) -o $(TARGET)
 
 run: $(TARGET)

@@ -128,17 +128,29 @@ ensure_confidence_level <- function(conf_level) {
   conf_level
 }
 
-format_number <- function(x, digits = 4) {
+RAW_DISPLAY_DIGITS <- 15L
+
+format_number <- function(x, digits = RAW_DISPLAY_DIGITS) {
   formatted <- vapply(
     x,
     FUN = function(value) {
-      rounded <- round(value, digits)
-
-      if (abs(rounded - round(rounded)) < 10^(-digits)) {
-        as.character(as.integer(round(rounded)))
-      } else {
-        format(rounded, trim = TRUE, scientific = FALSE, nsmall = 0)
+      if (!is.finite(value)) {
+        return(as.character(value))
       }
+
+      normalized_value <- if (abs(value) < 10^(-RAW_DISPLAY_DIGITS)) 0 else value
+
+      if (abs(normalized_value - round(normalized_value)) < 10^(-RAW_DISPLAY_DIGITS)) {
+        return(format(round(normalized_value), trim = TRUE, scientific = FALSE))
+      }
+
+      format(
+        normalized_value,
+        digits = RAW_DISPLAY_DIGITS,
+        trim = TRUE,
+        scientific = FALSE,
+        nsmall = 0
+      )
     },
     FUN.VALUE = character(1)
   )
@@ -150,7 +162,7 @@ format_interval <- function(lower, upper, digits = 4) {
   paste0("(", format_number(lower, digits), ", ", format_number(upper, digits), ")")
 }
 
-format_percent <- function(x, digits = 2) {
+format_percent <- function(x, digits = RAW_DISPLAY_DIGITS) {
   paste0(format_number(x * 100, digits), "%")
 }
 

@@ -707,6 +707,34 @@ inline void findPooledTCI(
   );
 }
 
+inline void findClaimTail(
+  const std::string& claim_text,
+  const std::string& difference_definition = "second_minus_first"
+) {
+  run_operation("infer_claim_tail", {claim_text, difference_definition});
+}
+
+inline void findProblemHypotheses(const std::string& problem_text) {
+  run_operation("problem_hypotheses", {problem_text});
+}
+
+inline void findProblemStepAnswers(const std::string& problem_text) {
+  run_operation("problem_step_answers", {problem_text});
+}
+
+inline void findHypothesisConclusion(
+  double alpha,
+  const std::string& decision,
+  const std::string& claim_text,
+  const std::string& claim_location = ""
+) {
+  if (claim_location.empty()) {
+    run_operation("hypothesis_conclusion", {std::to_string(alpha), decision, claim_text});
+  } else {
+    run_operation("hypothesis_conclusion", {std::to_string(alpha), decision, claim_text, claim_location});
+  }
+}
+
 inline void findPairedDifferenceMean(const NumberList& before, const NumberList& after) {
   run_operation("paired_difference_mean", interleave_pairs(before, after));
 }
@@ -727,6 +755,64 @@ inline void runPairedTTest(
   const std::string& tail
 ) {
   runPairedTTest(make_number_list(before), make_number_list(after), alpha, tail);
+}
+
+inline void solvePairedProblemFromText(
+  const NumberList& before,
+  const NumberList& after,
+  const std::string& problem_text
+) {
+  StringList args = {problem_text};
+  StringList pairs = interleave_pairs(before, after);
+  args.insert(args.end(), pairs.begin(), pairs.end());
+  run_operation("paired_problem_step_answers", args);
+}
+inline void solvePairedProblemFromText(
+  std::initializer_list<double> before,
+  std::initializer_list<double> after,
+  const std::string& problem_text
+) {
+  solvePairedProblemFromText(make_number_list(before), make_number_list(after), problem_text);
+}
+
+inline void runPairedTTestFromProblem(
+  const NumberList& before,
+  const NumberList& after,
+  const std::string& problem_text
+) {
+  StringList args = {problem_text};
+  StringList pairs = interleave_pairs(before, after);
+  args.insert(args.end(), pairs.begin(), pairs.end());
+  run_operation("paired_t_test_problem", args);
+}
+inline void runPairedTTestFromProblem(
+  std::initializer_list<double> before,
+  std::initializer_list<double> after,
+  const std::string& problem_text
+) {
+  runPairedTTestFromProblem(make_number_list(before), make_number_list(after), problem_text);
+}
+
+inline void runPairedTTestFromClaim(
+  const NumberList& before,
+  const NumberList& after,
+  double alpha,
+  const std::string& claim_text,
+  const std::string& difference_definition = "second_minus_first"
+) {
+  StringList args = {std::to_string(alpha), claim_text, difference_definition};
+  StringList pairs = interleave_pairs(before, after);
+  args.insert(args.end(), pairs.begin(), pairs.end());
+  run_operation("paired_t_test_claim", args);
+}
+inline void runPairedTTestFromClaim(
+  std::initializer_list<double> before,
+  std::initializer_list<double> after,
+  double alpha,
+  const std::string& claim_text,
+  const std::string& difference_definition = "second_minus_first"
+) {
+  runPairedTTestFromClaim(make_number_list(before), make_number_list(after), alpha, claim_text, difference_definition);
 }
 
 inline void findPairedTCI(const NumberList& before, const NumberList& after, double conf_level) {

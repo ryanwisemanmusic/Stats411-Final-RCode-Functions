@@ -24,6 +24,7 @@ project_root <- if (exists("CODEX_PROJECT_ROOT", inherits = TRUE)) {
 load_stat_modules <- function(project_root_path) {
   source(file.path(project_root_path, "R", "stat_utils.R"))
   source(file.path(project_root_path, "R", "worked_calculation.R"))
+  source(file.path(project_root_path, "R", "claim_analysis.R"))
   source(file.path(project_root_path, "R", "descriptive_stats.R"))
   source(file.path(project_root_path, "R", "dispersion_stats.R"))
   source(file.path(project_root_path, "R", "standardization_stats.R"))

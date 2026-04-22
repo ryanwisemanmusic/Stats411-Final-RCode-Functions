@@ -1,11 +1,12 @@
 # STAT 411 Final Helper Scaffold
 
 This repo is set up so you can work from `main.cpp` while letting R handle the actual statistics calculations and worked-out steps.
+Outputs are intentionally printed at full display precision so you can decide the final rounding yourself based on the problem statement.
 The large `STAT_Scratchpaper.R` notebook is preserved in the repo, and its reusable calculation patterns have been extracted into modular files under `R/`.
 
 ## Files
 
-- `main.cpp`: the exam-facing file where you call helpers like `findMean({1, 5, 9, 3, 4});` and paste table columns for regression-style problems.
+- `main.cpp`: the exam-facing file where you call helpers like `findMean({1, 5, 9, 3, 4});`, with labeled 1-column, 2-column, 3-column, and 4-column data containers for exam problems.
 - `cpp/stats_bridge.hpp` and `cpp/stats_bridge.cpp`: the C++ to R bridge layer used by `main.cpp`.
 - `main.R`: optional pure-R entrypoint if you want to run the helpers directly in R.
 - `R/r_bridge_cli.R`: command-line bridge that receives values from C++ and calls the R helpers.
@@ -59,25 +60,31 @@ main()
 
 ## C++ Exam Workflow
 
-1. Put single-list data into the `dataSet` vector in `main.cpp`, or paste table columns into the `observedY` / `predictorX` vectors there.
-2. If a regression equation is given, put the intercept and slope into `regressionIntercept` and `regressionSlope`.
-3. Uncomment the function calls you need in `main.cpp`.
-4. Build and run `./stats_helper`.
-5. Read the printed formula, substitutions, and final answer.
+1. Keep one active table per shape in `main.cpp`: `oneColumnData`, `twoColumnData`, `threeColumnData`, and `fourColumnData`.
+2. Replace the values inside the matching table instead of creating extra tables.
+3. For paired data, use the first two-column vector as "before/without" and the second as "after/with" unless the problem explicitly defines a different order.
+4. Keep any two-column settings, like confidence level, alpha, tail, or regression coefficients, directly under `twoColumnData`.
+5. Uncomment the function calls you need in `main.cpp`.
+6. Build and run `./stats_helper`.
+7. Read the printed formula, substitutions, and final answer, then round only as the problem instructs.
 
 Example:
 
 ```cpp
-stats_bridge::findMean({1, 5, 9, 3, 4});
-stats_bridge::findBinomialProbability("exact", 10, 0.3, 4);
-stats_bridge::runOneSampleTTest(433, 437, 22, 17, 0.05, "left");
-stats_bridge::findCorrelation({2, 3, 5, 3, 4, 6}, {125, 138, 116, 121, 136, 115});
-stats_bridge::findRegressionPredictionRow(184.8, 1006, 32.98, 0.14);
+stats_bridge::findMean(oneColumnData.first_values);
+stats_bridge::findPairedDifferenceMean(twoColumnData.first_values, twoColumnData.second_values);
+stats_bridge::findPairedTCI(twoColumnData.first_values, twoColumnData.second_values, twoColumnConfidenceLevel);
+stats_bridge::runPairedTTest(twoColumnData.first_values, twoColumnData.second_values, twoColumnAlpha, twoColumnTail);
+stats_bridge::findGroupedSampleStats(
+  threeColumnData.first_values,
+  threeColumnData.second_values,
+  threeColumnData.third_values
+);
 stats_bridge::findRegressionPredictionTable(
-  {227.6, 257.2, 269.4, 203.5, 225.4, 217.4, 182.2, 184.8},
-  {1428, 1494, 1694, 1214, 1399, 1291, 1193, 1006},
-  32.98,
-  0.14
+  twoColumnData.first_values,
+  twoColumnData.second_values,
+  twoColumnRegressionIntercept,
+  twoColumnRegressionSlope
 );
 ```
 

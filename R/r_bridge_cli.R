@@ -426,6 +426,26 @@ calculation <- switch(
     numeric_args <- parse_numeric_args(op_args)
     pooled_t_ci_worked(numeric_args[1], numeric_args[2], numeric_args[3], numeric_args[4], numeric_args[5], numeric_args[6], numeric_args[7])
   },
+  infer_claim_tail = {
+    if (length(op_args) == 1) {
+      infer_claim_tail_worked(op_args[1])
+    } else {
+      infer_claim_tail_worked(op_args[1], op_args[2])
+    }
+  },
+  hypothesis_conclusion = {
+    alpha <- as.numeric(op_args[1])
+    decision <- op_args[2]
+    claim_text <- op_args[3]
+
+    if (length(op_args) >= 4) {
+      hypothesis_conclusion_worked(alpha, decision, claim_text, op_args[4])
+    } else {
+      hypothesis_conclusion_worked(alpha, decision, claim_text)
+    }
+  },
+  problem_hypotheses = problem_hypotheses_worked(op_args[1]),
+  problem_step_answers = problem_step_answers_worked(op_args[1]),
   paired_difference_mean = {
     pair_matrix <- parse_pair_matrix(op_args)
     paired_difference_mean_worked(pair_matrix[, 1], pair_matrix[, 2])
@@ -440,6 +460,23 @@ calculation <- switch(
     conf_level <- as.numeric(op_args[1])
     pair_matrix <- parse_pair_matrix(op_args[-1])
     paired_t_ci_worked(pair_matrix[, 1], pair_matrix[, 2], conf_level)
+  },
+  paired_t_test_claim = {
+    alpha <- as.numeric(op_args[1])
+    claim_text <- op_args[2]
+    difference_definition <- op_args[3]
+    pair_matrix <- parse_pair_matrix(op_args[-c(1, 2, 3)])
+    paired_t_test_from_claim_worked(pair_matrix[, 1], pair_matrix[, 2], alpha, claim_text, difference_definition)
+  },
+  paired_t_test_problem = {
+    problem_text <- op_args[1]
+    pair_matrix <- parse_pair_matrix(op_args[-1])
+    paired_t_test_from_problem_worked(pair_matrix[, 1], pair_matrix[, 2], problem_text)
+  },
+  paired_problem_step_answers = {
+    problem_text <- op_args[1]
+    pair_matrix <- parse_pair_matrix(op_args[-1])
+    paired_problem_step_answers_worked(pair_matrix[, 1], pair_matrix[, 2], problem_text)
   },
   two_proportion_ci = {
     numeric_args <- parse_numeric_args(op_args)
